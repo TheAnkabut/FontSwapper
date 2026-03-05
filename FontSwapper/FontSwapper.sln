@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35013.160
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FontSwapper", "FontSwapper.vcxproj", "{82D0D47B-24FD-460E-B36E-9FED1F53B3CD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{82D0D47B-24FD-460E-B36E-9FED1F53B3CD}.Release|x64.ActiveCfg = Release|x64
+		{82D0D47B-24FD-460E-B36E-9FED1F53B3CD}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {198B5AC0-7312-41DE-9D0C-7B41880F4F34}
+	EndGlobalSection
+EndGlobal
