@@ -10,18 +10,48 @@
 
 namespace FontHook
 {
+    // ==================== Function Finder ==================== 
+
+    static uintptr_t FindFontLookupAddress(uintptr_t baseAddress, size_t imageSize) {
+        const char* searchStr = "Searching for font: \"";
+        size_t patternLen = strlen(searchStr);
+        const uint8_t* data = reinterpret_cast<const uint8_t*>(baseAddress);
+
+        for (size_t i = 0; i < imageSize - patternLen; ++i) {
+            // 1. String
+            if (memcmp(data + i, searchStr, patternLen) == 0) {
+                uintptr_t strAddr = baseAddress + i;
+
+                // 2. Xref
+                for (size_t j = 0; j < imageSize - 7; ++j) {
+                    uintptr_t xrefAddr = 0;
+                    if (j + 8 <= imageSize && *reinterpret_cast<const uintptr_t*>(data + j) == strAddr) {
+                        xrefAddr = baseAddress + j;
+                    } else if (j + 7 <= imageSize) {
+                        int32_t offset = *reinterpret_cast<const int32_t*>(data + j + 3);
+                        if ((baseAddress + j) + 7 + offset == strAddr) {
+                            xrefAddr = baseAddress + j;
+                        }
+                    }
+
+                    // 3. Function start
+                    if (xrefAddr != 0) {
+                        size_t offset = xrefAddr - baseAddress;
+                        for (size_t k = 0; k < 2000 && offset >= k; ++k) {
+                            if (offset - k > 0 && data[offset - k - 1] == 0xCC) {
+                                return baseAddress + offset - k;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+
     // ==================== State ====================
 
     static uintptr_t fontFunctionAddress = 0;
-
-    // Pattern of the font lookup 
-    static const std::vector<uint8_t> FontFunctionSignature = {
-        0x48, 0x89, 0x5C, 0x24, 0x10, 0x48, 0x89, 0x4C,
-        0x24, 0x08, 0x55, 0x56, 0x57, 0x41, 0x54, 0x41,
-        0x55, 0x41, 0x56, 0x41, 0x57, 0x48, 0x81, 0xEC,
-        0xA0, 0x00, 0x00, 0x00, 0x33, 0xDB
-    };
-
 
     // Original function pointer (set by MinHook)
     typedef void* (__fastcall* FontLookupFunction)(
@@ -34,38 +64,6 @@ namespace FontHook
 
     // Pointer to the active font mappings (Settings)
     static const std::unordered_map<std::string, std::string>* activeMappings = nullptr;
-
-    // ==================== Pattern Scanner ====================
-
-    static uintptr_t FindPatternInMemory(
-        uintptr_t searchStart,
-        size_t searchSize,
-        const std::vector<uint8_t>& pattern)
-    {
-        const uint8_t* memory = reinterpret_cast<const uint8_t*>(searchStart);
-        size_t patternSize = pattern.size();
-
-        for (size_t offset = 0; offset < searchSize - patternSize; ++offset)
-        {
-            bool matched = true;
-
-            for (size_t i = 0; i < patternSize; ++i)
-            {
-                if (memory[offset + i] != pattern[i])
-                {
-                    matched = false;
-                    break;
-                }
-            }
-
-            if (matched)
-            {
-                return searchStart + offset;
-            }
-        }
-
-        return 0;
-    }
 
     // ==================== Hooked Font Lookup ====================
 
@@ -86,7 +84,11 @@ namespace FontHook
             if (it != activeMappings->end() && !it->second.empty())
             {
                 redirectedFont = it->second;
-                fontToUse = redirectedFont.c_str();
+                if (redirectedFont == "None") {
+                    fontToUse = "";
+                } else {
+                    fontToUse = redirectedFont.c_str();
+                }
             }
         }
 
@@ -105,11 +107,7 @@ namespace FontHook
             return true;
         }
 
-        uintptr_t functionAddress = FindPatternInMemory(
-            baseAddress,
-            imageSize,
-            FontFunctionSignature
-        );
+        uintptr_t functionAddress = FindFontLookupAddress(baseAddress, imageSize);
 
         if (functionAddress == 0)
         {
