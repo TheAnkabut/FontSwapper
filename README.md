@@ -33,6 +33,7 @@ Swap the in-game fonts of Rocket League to any other built-in font style.
 * `$HeaderThinFont`
 * `$SmallFont`
 * `$NumbersWideFont`
+* `(None)` *(Renders squares)*
 
 </details>
 

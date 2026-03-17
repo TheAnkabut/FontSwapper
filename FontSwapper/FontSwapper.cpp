@@ -63,7 +63,7 @@ void FontSwapper::onLoad()
         std::string clean = font;
         if (!clean.empty() && clean[0] == '$') clean = clean.substr(1);
         std::string cvarName = "fs_map_" + clean;
-        cvarManager->registerCvar(cvarName, "0", "Font mapping for " + font, true, true, 0, true, static_cast<float>(Settings::knownFonts.size()), true);
+        cvarManager->registerCvar(cvarName, "0", "Font mapping for " + font, true, true, 0, true, static_cast<float>(Settings::knownFonts.size() + 1), true);
     }
 
     Settings::Initialize();

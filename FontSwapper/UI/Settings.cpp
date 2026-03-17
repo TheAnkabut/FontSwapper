@@ -47,6 +47,10 @@ namespace Settings
             {
                 fontMappings[font] = knownFonts[idx - 1];
             }
+            else if (idx == static_cast<int>(knownFonts.size()) + 1)
+            {
+                fontMappings[font] = "None";
+            }
         }
     }
 
@@ -98,7 +102,7 @@ namespace Settings
             
             const char* previewText = currentTarget.empty() 
                 ? L("keep_original") 
-                : currentTarget.c_str();
+                : (currentTarget == "None" ? "(None)" : currentTarget.c_str());
             
             std::string comboId = "##target_" + std::to_string(i);
             ImGui::SetNextItemWidth(-1);
@@ -114,6 +118,19 @@ namespace Settings
                     _globalCvarManager->executeCommand("writeconfig", false);
                 }
                 if (isOriginal)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
+
+                bool isNone = (currentTarget == "None");
+                if (ImGui::Selectable("(None)", isNone))
+                {
+                    fontMappings[sourceFont] = "None";
+                    auto cvar = _globalCvarManager->getCvar(CvarNameFor(sourceFont));
+                    if (cvar) cvar.setValue(fontCount + 1);
+                    _globalCvarManager->executeCommand("writeconfig", false);
+                }
+                if (isNone)
                 {
                     ImGui::SetItemDefaultFocus();
                 }
@@ -168,6 +185,16 @@ namespace Settings
         
         if (ImGui::BeginCombo("##setall", L("set_all_to")))
         {
+            if (ImGui::Selectable("(None)", false))
+            {
+                for (const auto& srcFont : knownFonts)
+                {
+                    fontMappings[srcFont] = "None";
+                    auto cvar = _globalCvarManager->getCvar(CvarNameFor(srcFont));
+                    if (cvar) cvar.setValue(fontCount + 1);
+                }
+                _globalCvarManager->executeCommand("writeconfig", false);
+            }
             for (int j = 0; j < fontCount; ++j)
             {
                 const std::string& targetFont = knownFonts[j];
